@@ -1,0 +1,88 @@
+-- Task 1: User Engagement
+SELECT
+    EXTRACT(WEEK FROM occurred_at) AS week_of_year,
+    Date(MIN(occurred_at)) AS week_start_date,
+    Date(MAX(occurred_at)) AS week_end_date,
+    COUNT(DISTINCT user_id) AS Users_Logged
+FROM
+    job.events
+WHERE
+    event_type = 'en
+gagement'
+GROUP BY
+    week_of_year
+ORDER BY
+    week_of_year;
+-- Task 2: User Growth
+SELECT
+    EXTRACT(WEEK FROM occurred_at) AS week_of_year,
+    COUNT(DISTINCT user_id) AS Users_signed_up
+FROM job.events
+WHERE
+    event_type = 'signup_flow' ANd event_name='complete_signup'
+GROUP BY
+    week_of_year
+ORDER BY
+    week_of_year;
+
+-- Task 3: Weekly Retention
+SELECT 
+    EXTRACT(WEEK FROM u.created_at) AS Week_of_the_year,
+    COUNT(DISTINCT u.user_id) AS Users_registered,
+    COUNT(DISTINCT e.user_id) AS Retained_users,
+    COUNT(DISTINCT e.user_id)*100/COUNT(DISTINCT u.user_id) AS retention_rate
+FROM
+    users u
+        LEFT JOIN
+    events e ON u.user_id = e.user_id
+        AND WEEK(e.occurred_at) = WEEK(u.created_at)
+WHERE
+    u.state = 'active'
+GROUP BY Week_of_the_year
+ORDER BY Week_of_the_year;
+-- Task 4: Weekly Engagement
+With WDT AS -- WDA means weekly device type
+(
+ SELECT
+    e.device AS Device_name,
+    EXTRACT(WEEK FROM e.occurred_at) AS Week_of_the_year,
+    COUNT(e.device) AS Number_of_devices
+FROM
+    job.events e
+WHERE
+    e.event_type = 'Engagement'
+GROUP BY 1,2
+)
+SELECT 
+    Week_of_the_year, AVG(Number_of_devices) AS Weekly_average_engagement_per_device
+FROM
+    WDT
+GROUP BY 1;LECT 
+    device AS Device_name,
+    EXTRACT(WEEK FROM occurred_at) AS Week_of_the_year,
+    COUNT(device) AS Number_of_devices
+FROM
+    events
+WHERE
+    event_type = 'Engagement'
+GROUP BY 1,2
+ORDER BY 2;
+-- Task 5: Email Engagement
+SELECT 
+    WEEK(occurred_at) AS Week_of_the_year,
+    COUNT(DISTINCT (CASE
+            WHEN action = 'sent_weekly_digest' THEN user_id
+        END)) AS Weekly_digest,
+    COUNT(DISTINCT (CASE
+            WHEN action = 'sent_reengagement_email' THEN user_id
+        END)) AS Re_engagement_email,
+    COUNT(DISTINCT (CASE
+            WHEN action = 'email_open' THEN user_id
+        END)) AS User_opened_email,
+    COUNT(DISTINCT (CASE
+            WHEN action = 'email_clickthrough' THEN user_id
+        END)) AS Email_clickthrough
+FROM
+    job.email_events
+GROUP BY WEEK(occurred_at)
+ORDER BY WEEK(occurred_at);
