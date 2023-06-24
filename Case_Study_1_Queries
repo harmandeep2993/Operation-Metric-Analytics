@@ -1,0 +1,66 @@
+# CASE STUDY 1 QUERIES
+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+-- Task 1: Total Number of Jobs Reviewed
+SELECT 
+    ds AS Date,
+    COUNT(job_id) AS Jobs_per_day,
+    SUM(time_spent) AS time_spent_per_day_in_secs,
+    SUM(time_spent) / 3600 AS time_spent_per_day_in_hours,
+    COUNT(job_id) / (SUM(time_spent) / 3600) AS Jobs_reviewed_per_day_per_hour
+FROM
+    job.job_data
+GROUP BY 1
+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+-- TASK 2: Throughput
+WITH MA AS -- MA represent moving average. 
+(
+SELECT 
+    ds AS Date,
+    event AS Event_type,
+    COUNT(event) AS Total_events,
+    SUM(time_spent) AS Total_timespent_in_secs,
+    COUNT(event) / SUM(time_spent) AS Events_per_Second,
+    COUNT(event) / (SUM(time_spent) / 3600) AS Events_per_hour
+FROM job.job_data
+GROUP BY 1 , 2 
+)
+SELECT
+	date, 
+	Event_type, 
+	Total_events,
+	Total_timespent_in_secs,
+	Events_per_Second, 
+	ROUND(Events_per_hour) as Event_per_hour, 
+	ROUND(AVG(Events_per_hour) OVER(ORDER BY Date ROWS BETWEEN 1 PRECEDING AND CURRENT ROW))  AS Moving_average
+ from 	MA;
+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+-- Task 3: Language Percentage Share
+SELECT 
+language AS CV_Language,
+count(job_id) AS Number_of_CV,
+count(job_id)*100 / sum(count(*)) OVER() AS Percnetage_Share
+FROM job.job_data
+WHERE ds BETWEEN'2020-11-01' AND '2020-11-30'
+GROUP BY 1
+ORDER BY 1 ASC;
+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+-- Task 4: Duplicate Row
+
+WITH cte as
+(
+SELECT 
+    job_id AS JOB_ID, 
+    COUNT(actor_id) AS Application_count
+FROM  job.job_data
+GROUP BY job_id
+)
+SELECT 
+    j.ds AS Date, c.JOB_ID AS Unique_Job_ID, j.actor_id AS Actor_ID, j.event AS Event_Type, j.language AS Application_langauge
+FROM
+    cte c
+        LEFT JOIN
+    job.job_data j ON c.JOB_ID = j.job_id
+WHERE
+    Application_count = 3
