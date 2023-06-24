@@ -12,7 +12,7 @@ CREATE TABLE job_data
     time_spent INT NOT NULL,
     org CHAR(2)
 );
-INSERT INTO job_data( ds,job_id,actor_id,event,language,time_spent,org)
+INSERT INTO job_data(ds,job_id,actor_id,event,language,time_spent,org)
 VALUES('2020-11-30','21','1001','skip','English','15','A'),
 ('2020-11-30','22','1006','transfer','Aracbic','25','B'),
 ('2020-11-29','23','1003','decision','Persian','20','C'),
